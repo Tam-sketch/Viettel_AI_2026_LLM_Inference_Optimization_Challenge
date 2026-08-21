@@ -226,7 +226,3 @@ Quá trình dịch ngược mã nguồn `arg_utils.py` và phân tích log thử
 * **Phan Khánh Tâm**
 * Khoa Kỹ thuật Máy tính — Trường Đại học Công nghệ Thông tin, ĐHQG-HCM (UIT)
 * Thành tích: Hạng **170 / 281** tại **Viettel AI Race 2026** (ERS: 61.26)
-
-```
-
-```
