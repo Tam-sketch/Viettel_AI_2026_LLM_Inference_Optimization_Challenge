@@ -1,6 +1,5 @@
 
-# 🚀 Viettel AI Race 2026: Tối Ưu Hóa vLLM Serving Cho Mô Hình LFM2.5
-https://competition.viettel.vn/contests/llm-2026
+# 🚀 Viettel AI Race 2026: Tối Ưu Hóa vLLM Serving Cho Mô Hình LFM2.5 (https://www.google.com/url?sa=E&source=gmail&q=https://competition.viettel.vn/contests/llm-2026)
 <div align="center">
   <img src="https://img.shields.io/badge/vLLM-0.6.x-blue?style=for-the-badge&logo=vllm" alt="vLLM Version" />
   <img src="https://img.shields.io/badge/Model-LFM2.5--1.2B-orange?style=for-the-badge" alt="Model" />
