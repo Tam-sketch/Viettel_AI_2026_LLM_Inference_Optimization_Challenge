@@ -1,3 +1,4 @@
+
 # 🚀 Viettel AI Race 2026: Tối Ưu Hóa vLLM Serving Cho Mô Hình LFM2.5
 
 <div align="center">
@@ -11,6 +12,7 @@
 ## 📑 Mục Lục
 - [Tổng Quan Dự Án](#-tổng-quan-dự-án)
 - [Môi Trường & Ràng Buộc Phần Cứng](#-môi-trường--ràng-buộc-phần-cứng)
+- [So Sánh Docker Image Gốc vs Tự Build](#-so-sánh-docker-image-gốc-vs-tự-build)
 - [Kết Quả Chung Cuộc & Benchmark](#-kết-quả-chung-cuộc--benchmark)
 - [Chiến Lược Tối Ưu Hóa](#-chiến-lược-tối-ưu-hóa)
 - [Cấu Hình Triển Khai](#-cấu-hình-triển-khai)
@@ -31,25 +33,39 @@ Mục tiêu trọng tâm là tối đa hóa điểm số **ERS (Efficiency Ranki
 Hệ thống hoạt động trong môi trường phần cứng có sự bất đối xứng lớn:
 * **GPU:** NVIDIA H200 (Cấu hình phân vùng MIG 7 cố định).
 * **CPU:** Giới hạn nghiêm ngặt ở **3 Cores** (Gây nghẽn nghiêm trọng cho các tác vụ lập lịch, tiền xử lý và I/O).
-* **Docker Image:** `24521569/lfm-optimized:v1` (Tích hợp FlashInfer 0.6.11, CUDA 13.0.2 trên nền vLLM tùy biến).
 * **Cơ Chế Đánh Giá:** Máy chấm gửi các luồng request hội thoại đa lượt (multi-turn chat) theo phân phối Poisson tới **1 worker duy nhất**. Điểm số bị phạt nặng nhất bởi chỉ số `failed_count` (các request quá thời gian chờ).
+
+## 🐳 So Sánh Docker Image Gốc vs Tự Build
+
+Để vượt qua giới hạn phần cứng, Docker Image đã được xây dựng lại (custom build) thay vì sử dụng image mặc định từ BTC:
+
+| Tiêu chí | Image Gốc BTC (`vllm/vllm-openai:v0.22.1`) | Image Tự Build (`24521569/lfm-optimized:v1`) |
+| :--- | :--- | :--- |
+| **Bản chất Image** | Image chuẩn phân phối từ vLLM registry / BTC cấp ban đầu. | Image tùy biến (custom build) được tối ưu sâu và đóng gói riêng. |
+| **Nền tảng Runtime** | Môi trường CUDA / PyTorch cơ bản theo bản phát hành cũ. | Cập nhật **CUDA 13.0.2**, **Python 3.12**, tối ưu riêng cho kiến trúc NVIDIA H200. |
+| **Nhánh vLLM** | Mã nguồn vLLM bản cũ (v0.22.x / v0.4.x đời đầu). | Nhánh mã nguồn vLLM hiện đại (**v0.6.x+**), tương thích cấu trúc mới. |
+| **Backend Attention** | Hỗ trợ FlashAttention / PagedAttention mặc định. | Tích hợp sẵn **FlashInfer `0.6.11.post2`** và kernel tùy biến cho LFM. |
+| **Cơ chế GDN Prefill** | Không hỗ trợ cờ `--gdn-prefill-backend`. | Hỗ trợ và nhận diện cờ `--gdn-prefill-backend=flashinfer`. |
+| **Quản lý VRAM & Swap** | Còn sử dụng cơ chế `--swap-space`. | Loại bỏ hoàn toàn `--swap-space` trong `arg_utils.py`, chuyển sang quản lý thuần VRAM. |
+| **Lượng tử hóa KV Cache**| Hỗ trợ cơ bản. | Tối ưu hóa sâu cho định dạng **`fp8_e4m3`** trên phần cứng Hopper (H200). |
+| **Điểm ERS Thực Tế** | **~49.00** (Nghẽn queue, fail 88/420 requests). | **61.26** (TTFT P95 = 70ms, hoàn thành 413/420 requests). |
 
 ## 📊 Kết Quả Chung Cuộc & Benchmark
 
-Dự án khép lại chiến dịch với thứ hạng **170/281** chung cuộc. Cấu hình **này** là mốc cân bằng tối ưu nhất được xác lập trong quá trình thử nghiệm thực tế:
+Dự án khép lại chiến dịch với thứ hạng **170/281** chung cuộc. Cấu hình **V10** là mốc cân bằng tối ưu nhất được xác lập trong quá trình thử nghiệm thực tế:
 
-| Chỉ Số | Kết Quả | 
-| :--- | :--- | :--- |
+| Chỉ Số | Kết Quả |
+| :--- | :--- |
 | **Thứ Hạng Chung Cuộc** | **170 / 281** |
 | **Điểm ERS Đạt Được** | **61.26** |
 | **TTFT P50** | `43ms` |
 | **TTFT P95** | `70ms` |
-| **Tỷ Lệ Thành Công** | `413 / 420` | 
-| **TBT Median** | `4ms` | 
+| **Tỷ Lệ Thành Công** | `413 / 420` |
+| **TBT Median** | `4ms` |
 
 ## 💡 Chiến Lược Tối Ưu Hóa
 
-Cấu hình được xây dựng dựa trên việc khai thác sâu các đặc tính vận hành của vLLM:
+Cấu hình V10 được xây dựng dựa trên việc khai thác sâu các đặc tính vận hành của vLLM:
 
 1. **Khai Thác Prefix Caching Cho Hội Thoại Đa Lượt:**
    * Vì máy chấm gửi lại toàn bộ lịch sử hội thoại cho cùng một worker, cờ `--enable-prefix-caching` giúp tái sử dụng KV cache của các lượt trước. TTFT ở các turn sau được giảm xuống gần bằng 0.
