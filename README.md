@@ -34,7 +34,7 @@ Hệ thống hoạt động trong môi trường phần cứng có sự bất đ
 * **Docker Image:** `24521569/lfm-optimized:v1` (Tích hợp FlashInfer 0.6.11, CUDA 13.0.2 trên nền vLLM tùy biến).
 * **Cơ Chế Đánh Giá:** Máy chấm gửi các luồng request hội thoại đa lượt (multi-turn chat) theo phân phối Poisson tới **1 worker duy nhất**. Điểm số bị phạt nặng nhất bởi chỉ số `failed_count` (các request quá thời gian chờ).
 
-## 📊 Kết Quả Benchmark (Mốc V10)
+## 📊 Kết Quả Benchmark
 
 Cấu hình **V10** là mốc cân bằng tối ưu nhất được xác lập trong quá trình thử nghiệm:
 
@@ -48,7 +48,7 @@ Cấu hình **V10** là mốc cân bằng tối ưu nhất được xác lập t
 
 ## 💡 Chiến Lược Tối Ưu Hóa
 
-Cấu hình V10 được xây dựng dựa trên việc khai thác sâu các đặc tính vận hành của vLLM:
+Cấu hình được xây dựng dựa trên việc khai thác sâu các đặc tính vận hành của vLLM:
 
 1. **Khai Thác Prefix Caching Cho Hội Thoại Đa Lượt:**
    * Vì máy chấm gửi lại toàn bộ lịch sử hội thoại cho cùng một worker, cờ `--enable-prefix-caching` giúp tái sử dụng KV cache của các lượt trước. TTFT ở các turn sau được giảm xuống gần bằng 0.
