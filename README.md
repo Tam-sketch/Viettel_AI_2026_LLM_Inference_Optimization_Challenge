@@ -38,13 +38,13 @@ Hệ thống hoạt động trong môi trường phần cứng có sự bất đ
 
 Cấu hình **V10** là mốc cân bằng tối ưu nhất được xác lập trong quá trình thử nghiệm:
 
-| Chỉ Số | Kết Quả | Đánh Giá Kỹ Thuật |
+| Chỉ Số | Kết Quả |
 | :--- | :--- | :--- |
-| **Điểm ERS** | **61.26** | Vượt xa cấu hình gốc, đứng vững ở nhóm điểm an toàn. |
-| **TTFT P50** | `43ms` | Tốc độ xử lý token đầu tiên đạt mức cực nhanh. |
-| **TTFT P95** | `70ms` | Đảm bảo 95% request phản hồi gần như tức thì. |
-| **Tỷ Lệ Thành Công** | `413 / 420` | Đánh rơi 7 request do hiện tượng Decode Stall nhẹ (Giới hạn CPU). |
-| **TBT Median** | `4ms` | Độ trễ giữa các token (Time Between Tokens) duy trì ổn định. |
+| **Điểm ERS** | **61.26** | 
+| **TTFT P50** | `43ms` | 
+| **TTFT P95** | `70ms` | 
+| **Tỷ Lệ Thành Công** | `413 / 420` | 
+| **TBT Median** | `4ms` |
 
 ## 💡 Chiến Lược Tối Ưu Hóa
 
