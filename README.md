@@ -1,123 +1,9 @@
-# 🚀 Viettel AI Race 2026: LFM2.5 vLLM Serving Optimization
-
-<div align="center">
-  <img src="https://img.shields.io/badge/vLLM-0.6.x-blue?style=for-the-badge&logo=vllm" alt="vLLM Version" />
-  <img src="https://img.shields.io/badge/Model-LFM2.5--1.2B-orange?style=for-the-badge" alt="Model" />
-  <img src="https://img.shields.io/badge/Hardware-NVIDIA_H200_MIG_7-76B900?style=for-the-badge&logo=nvidia" alt="Hardware" />
-  <img src="https://img.shields.io/badge/ERS_Score-61.26-success?style=for-the-badge" alt="ERS Score" />
-</div>
-
-## 📑 Table of Contents
-- [Introduction](#-introduction)
-- [Environment & Constraints](#-environment--constraints)
-- [Benchmark Results (V10 Milestone)](#-benchmark-results-v10-milestone)
-- [Optimization Strategies (The Secret Sauce)](#-optimization-strategies-the-secret-sauce)
-- [Deployment Configuration (Quick Start)](#-deployment-configuration-quick-start)
-- [Setup Guide](#️-setup-guide)
-- [Identified Pitfalls](#️-identified-pitfalls)
-- [Author](#-author)
-
----
-
-## 📌 Introduction
-
-This repository contains the configuration and optimization strategies for serving the **LFM2.5-1.2B-Instruct** model using a custom **vLLM** engine, developed for the **Viettel AI Race 2026**. 
-
-The core objective is to maximize the **ERS (Efficiency Ranking Score)** by striking a perfect balance between an ultra-low **TTFT (Time To First Token)** and high concurrency handling, without triggering OOM (Out Of Memory) or Timeout errors.
-
-## 🖥️ Environment & Constraints
-
-The system is designed to survive in a highly "asymmetrical" hardware environment where the GPU is exceptionally powerful, but the CPU acts as a severe bottleneck:
-- **GPU:** NVIDIA H200 (MIG 7 Profile).
-- **CPU:** Strictly limited to **3 Cores** (Causes severe bottlenecks for I/O and scheduling threads).
-- **Base Image:** `24521569/lfm-optimized:v1` (A custom image integrating FlashInfer 0.6.11 and CUDA 13.0.2).
-- **Benchmark Characteristics:** The scoring system fires concurrent multi-turn chat requests following a Poisson distribution at a **single worker**. The most heavily penalized metric is the `failed_count` (Timeouts).
-
-## 📊 Benchmark Results (V10 Milestone)
-
-After dozens of iterations and rigorous testing, the **V10** configuration was identified as the optimal physical boundary of the system, achieving record-breaking TTFT speeds:
-
-| Metric | Value | Notes |
-| :--- | :--- | :--- |
-| **ERS Score** | **61.26** | Safely cleared the baseline, placed in the high-tier zone. |
-| **TTFT P50** | `43ms` | Ultra-fast initialization thanks to GDN Prefill backend. |
-| **TTFT P95** | `70ms` | Ensures 95% of requests respond almost instantly. |
-| **Success Rate** | `413 / 420` | Dropped 7 requests due to a slight Decode Stall (CPU limits). |
-| **TBT Median** | `4ms` | Highly stable Time Between Tokens. |
-
-## 💡 Optimization Strategies (The Secret Sauce)
-
-The V10 configuration is not a coincidence but the result of deeply exploiting vLLM's advanced features tailored to the competition's rules:
-
-1. **The Multi-turn Weapon: `--enable-prefix-caching`**
-   Since the scoring rules send full conversation histories to a single worker, Prefix Caching prevents the system from recomputing K-V tensors for past context, dropping the TTFT for subsequent turns to near zero.
-
-2. **Bandwidth Overclocking: The FP8 Trade-off**
-   - Utilizing `--kv-cache-dtype=fp8_e4m3` combined with `--quantization=fp8`.
-   - **Pros:** Compresses memory bandwidth to the absolute minimum, allowing the H200 GPU to digest prompts at a blistering 70ms.
-   - **Cons:** On-the-fly weights casting heavily strains the 3-core CPU, causing a slight Decode Stall (dropping 7 requests). This was a deliberate trade-off to maintain record-breaking TTFT.
-
-3. **Safety Bounds:**
-   Setting `--max-num-seqs=14`, `--max-num-batched-tokens=4096`, and `--gpu-memory-utilization=0.95` creates an unbreakable safety net. Even during a Poisson burst, the VRAM is strictly protected from fragmentation and OOM crashes.
-
-## 🚀 Deployment Configuration (Quick Start)
-
-Deploy immediately using the optimized `docker-compose.yml`:
-
-```yaml
-services:
-  model:
-    image: 24521569/lfm-optimized:v1
-    entrypoint:
-      - python3
-      - -m
-      - vllm.entrypoints.openai.api_server
-    command:
-      # [1] Core Configuration
-      - --model=/model
-      - --served-model-name=LFM2.5-1.2B-Instruct
-      - --host=0.0.0.0
-      - --port=8000
-      - --tensor-parallel-size=1
-      
-      # [2] VRAM Management for H200 (MIG 7)
-      - --max-model-len=5120
-      - --gpu-memory-utilization=0.95
-      
-      # [3] Queue Safety Bounds (Protects the 3-Core CPU)
-      - --max-num-seqs=14
-      - --max-num-batched-tokens=4096
-      
-      # [4] Memory Overclocking (Online Quantization)
-      - --quantization=fp8
-      - --kv-cache-dtype=fp8_e4m3
-      - --dtype=bfloat16
-      
-      # [5] Prefill & Prefix Caching Optimization
-      - --enable-prefix-caching
-      - --gdn-prefill-backend=flashinfer
-      
-      # [6] CPU Overhead Elimination
-      - --disable-log-stats
-      - --no-enable-log-requests
-      - --trust-remote-code
-
-    ports:
-      - "8000:8000"
-    shm_size: "2g"
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
-Here is the complete, professional English version of the project `README.md`. You can copy and paste this directly into your GitHub repository.
+Dưới đây là toàn bộ nội dung file `README.md` hoàn chỉnh bằng tiếng Việt, được chuẩn hóa theo phong cách tài liệu mã nguồn mở chuyên nghiệp. Bạn chỉ cần copy và paste toàn bộ khối mã bên dưới vào repo.
 
 ---
 
 ```markdown
-# 🚀 Viettel AI Race 2026: LFM2.5 vLLM Serving Optimization
+# 🚀 Viettel AI Race 2026: Tối Ưu Hóa vLLM Serving Cho Mô Hình LFM2.5
 
 <div align="center">
   <img src="https://img.shields.io/badge/vLLM-0.6.x-blue?style=for-the-badge&logo=vllm" alt="vLLM Version" />
@@ -126,62 +12,63 @@ Here is the complete, professional English version of the project `README.md`. Y
   <img src="https://img.shields.io/badge/ERS_Score-61.26-success?style=for-the-badge" alt="ERS Score" />
 </div>
 
-## 📑 Table of Contents
-- [Introduction](#-introduction)
-- [Environment & Constraints](#-environment--constraints)
-- [Benchmark Results (V10 Milestone)](#-benchmark-results-v10-milestone)
-- [Optimization Strategies (The Secret Sauce)](#-optimization-strategies-the-secret-sauce)
-- [Deployment Configuration (Quick Start)](#-deployment-configuration-quick-start)
-- [Setup Guide](#️-setup-guide)
-- [Identified Pitfalls](#️-identified-pitfalls)
-- [Author](#-author)
+## 📑 Mục Lục
+- [Tổng Quan Dự Án](#-tổng-quan-dự-án)
+- [Môi Trường & Ràng Buộc Phần Cứng](#-môi-trường--ràng-buộc-phần-cứng)
+- [Kết Quả Benchmark (Mốc V10)](#-kết-quả-benchmark-mốc-v10)
+- [Chiến Lược Tối Ưu Hóa](#-chiến-lược-tối-ưu-hóa)
+- [Cấu Hình Triển Khai](#-cấu-hình-triển-khai)
+- [Hướng Dẫn Cài Đặt & Chạy Thử](#-hướng-dẫn-cài-đặt--chạy-thử)
+- [Các Cạm Bẫy Cần Tránh](#-các-cạm-bẫy-cần-tránh)
+- [Tác Giả](#-tác-giả)
 
 ---
 
-## 📌 Introduction
+## 📌 Tổng Quan Dự Án
 
-This repository contains the configuration and optimization strategies for serving the **LFM2.5-1.2B-Instruct** model using a custom **vLLM** engine, developed for the **Viettel AI Race 2026**. 
+Kho lưu trữ này chứa toàn bộ cấu hình, tài liệu kỹ thuật và chiến lược tối ưu hóa engine **vLLM** phục vụ mô hình **LFM2.5-1.2B-Instruct** trong khuôn khổ cuộc thi **Viettel AI Race 2026**.
 
-The core objective is to maximize the **ERS (Efficiency Ranking Score)** by striking a perfect balance between an ultra-low **TTFT (Time To First Token)** and high concurrency handling, without triggering OOM (Out Of Memory) or Timeout errors.
+Mục tiêu trọng tâm là tối đa hóa điểm số **ERS (Efficiency Ranking Score)** thông qua việc ép thấp thời gian tạo token đầu tiên (**TTFT**) và duy trì khả năng phục vụ đồng thời ở cường độ cao mà không gây tràn bộ nhớ (OOM) hay nghẽn luồng xử lý (Timeout).
 
-## 🖥️ Environment & Constraints
+## 🖥️ Môi Trường & Ràng Buộc Phần Cứng
 
-The system is designed to survive in a highly "asymmetrical" hardware environment where the GPU is exceptionally powerful, but the CPU acts as a severe bottleneck:
-- **GPU:** NVIDIA H200 (MIG 7 Profile).
-- **CPU:** Strictly limited to **3 Cores** (Causes severe bottlenecks for I/O and scheduling threads).
-- **Base Image:** `24521569/lfm-optimized:v1` (A custom image integrating FlashInfer 0.6.11 and CUDA 13.0.2).
-- **Benchmark Characteristics:** The scoring system fires concurrent multi-turn chat requests following a Poisson distribution at a **single worker**. The most heavily penalized metric is the `failed_count` (Timeouts).
+Hệ thống hoạt động trong môi trường phần cứng có sự bất đối xứng lớn:
+* **GPU:** NVIDIA H200 (Cấu hình phân vùng MIG 7 cố định).
+* **CPU:** Giới hạn nghiêm ngặt ở **3 Cores** (Gây nghẽn nghiêm trọng cho các tác vụ lập lịch, tiền xử lý và I/O).
+* **Docker Image:** `24521569/lfm-optimized:v1` (Tích hợp FlashInfer 0.6.11, CUDA 13.0.2 trên nền vLLM tùy biến).
+* **Cơ Chế Đánh Giá:** Máy chấm gửi các luồng request hội thoại đa lượt (multi-turn chat) theo phân phối Poisson tới **1 worker duy nhất**. Điểm số bị phạt nặng nhất bởi chỉ số `failed_count` (các request quá thời gian chờ).
 
-## 📊 Benchmark Results (V10 Milestone)
+## 📊 Kết Quả Benchmark (Mốc V10)
 
-After dozens of iterations and rigorous testing, the **V10** configuration was identified as the optimal physical boundary of the system, achieving record-breaking TTFT speeds:
+Cấu hình **V10** là mốc cân bằng tối ưu nhất được xác lập trong quá trình thử nghiệm:
 
-| Metric | Value | Notes |
+| Chỉ Số | Kết Quả | Đánh Giá Kỹ Thuật |
 | :--- | :--- | :--- |
-| **ERS Score** | **61.26** | Safely cleared the baseline, placed in the high-tier zone. |
-| **TTFT P50** | `43ms` | Ultra-fast initialization thanks to GDN Prefill backend. |
-| **TTFT P95** | `70ms` | Ensures 95% of requests respond almost instantly. |
-| **Success Rate** | `413 / 420` | Dropped 7 requests due to a slight Decode Stall (CPU limits). |
-| **TBT Median** | `4ms` | Highly stable Time Between Tokens. |
+| **Điểm ERS** | **61.26** | Vượt xa cấu hình gốc, đứng vững ở nhóm điểm an toàn. |
+| **TTFT P50** | `43ms` | Tốc độ xử lý token đầu tiên đạt mức cực nhanh. |
+| **TTFT P95** | `70ms` | Đảm bảo 95% request phản hồi gần như tức thì. |
+| **Tỷ Lệ Thành Công** | `413 / 420` | Đánh rơi 7 request do hiện tượng Decode Stall nhẹ (Giới hạn CPU). |
+| **TBT Median** | `4ms` | Độ trễ giữa các token (Time Between Tokens) duy trì ổn định. |
 
-## 💡 Optimization Strategies (The Secret Sauce)
+## 💡 Chiến Lược Tối Ưu Hóa
 
-The V10 configuration is not a coincidence but the result of deeply exploiting vLLM's advanced features tailored to the competition's rules:
+Cấu hình V10 được xây dựng dựa trên việc khai thác sâu các đặc tính vận hành của vLLM:
 
-1. **The Multi-turn Weapon: `--enable-prefix-caching`**
-   Since the scoring rules send full conversation histories to a single worker, Prefix Caching prevents the system from recomputing K-V tensors for past context, dropping the TTFT for subsequent turns to near zero.
+1. **Khai Thác Prefix Caching Cho Hội Thoại Đa Lượt:**
+   * Vì máy chấm gửi lại toàn bộ lịch sử hội thoại cho cùng một worker, cờ `--enable-prefix-caching` giúp tái sử dụng KV cache của các lượt trước. TTFT ở các turn sau được giảm xuống gần bằng 0.
 
-2. **Bandwidth Overclocking: The FP8 Trade-off**
-   - Utilizing `--kv-cache-dtype=fp8_e4m3` combined with `--quantization=fp8`.
-   - **Pros:** Compresses memory bandwidth to the absolute minimum, allowing the H200 GPU to digest prompts at a blistering 70ms.
-   - **Cons:** On-the-fly weights casting heavily strains the 3-core CPU, causing a slight Decode Stall (dropping 7 requests). This was a deliberate trade-off to maintain record-breaking TTFT.
+2. **Ép Băng Thông Bằng FP8 (Online Quantization):**
+   * Sử dụng kết hợp `--kv-cache-dtype=fp8_e4m3` và `--quantization=fp8`.
+   * **Ưu điểm:** Giảm dung lượng chiếm dụng bộ nhớ đệm, cho phép H200 prefill prompt ở tốc độ 70ms.
+   * **Đánh đổi:** Việc ép kiểu tạ mô hình online tạo thêm áp lực tính toán lên 3 CPU cores, gây ra hiện tượng chậm nhẹ ở pha Decode (đánh rơi 7 request). Đây là sự đánh đổi có tính toán để duy trì điểm TTFT ở mức cao nhất.
 
-3. **Safety Bounds:**
-   Setting `--max-num-seqs=14`, `--max-num-batched-tokens=4096`, and `--gpu-memory-utilization=0.95` creates an unbreakable safety net. Even during a Poisson burst, the VRAM is strictly protected from fragmentation and OOM crashes.
+3. **Thiết Lập Khung An Toàn (Safety Bounds):**
+   * Giới hạn `--max-num-seqs=14`, `--max-num-batched-tokens=4096` cùng `--gpu-memory-utilization=0.95`.
+   * Đảm bảo khi lưu lượng request tăng đột biến (Poisson burst), VRAM không bị phân mảnh và loại bỏ hoàn toàn nguy cơ sập container do OOM.
 
-## 🚀 Deployment Configuration (Quick Start)
+## 🚀 Cấu Hình Triển Khai
 
-Deploy immediately using the optimized `docker-compose.yml`:
+File cấu hình chính thức `docker-compose.yml` đạt mốc 61.26 ERS:
 
 ```yaml
 services:
@@ -192,31 +79,31 @@ services:
       - -m
       - vllm.entrypoints.openai.api_server
     command:
-      # [1] Core Configuration
+      # [1] Tham số dịch vụ cơ bản
       - --model=/model
       - --served-model-name=LFM2.5-1.2B-Instruct
       - --host=0.0.0.0
       - --port=8000
       - --tensor-parallel-size=1
       
-      # [2] VRAM Management for H200 (MIG 7)
+      # [2] Quản lý bộ nhớ VRAM H200 (MIG 7)
       - --max-model-len=5120
       - --gpu-memory-utilization=0.95
       
-      # [3] Queue Safety Bounds (Protects the 3-Core CPU)
+      # [3] Kiểm soát hàng đợi an toàn cho 3 CPU Cores
       - --max-num-seqs=14
       - --max-num-batched-tokens=4096
       
-      # [4] Memory Overclocking (Online Quantization)
+      # [4] Ép xung bộ nhớ đệm và lượng tử hóa
       - --quantization=fp8
       - --kv-cache-dtype=fp8_e4m3
       - --dtype=bfloat16
       
-      # [5] Prefill & Prefix Caching Optimization
+      # [5] Tối ưu hóa Prefill & Tái sử dụng Cache
       - --enable-prefix-caching
       - --gdn-prefill-backend=flashinfer
       
-      # [6] CPU Overhead Elimination
+      # [6] Triệt tiêu Overhead CPU từ Logging
       - --disable-log-stats
       - --no-enable-log-requests
       - --trust-remote-code
@@ -234,19 +121,17 @@ services:
 
 ```
 
-## ⚙️ Setup Guide
+## ⚙️ Hướng Dẫn Cài Đặt & Chạy Thử
 
-To run this configuration in a local environment (or personal server) before submitting it to the organizers, follow these steps:
+Để thiết lập và kiểm tra môi trường trên máy chủ local trước khi nộp bài:
 
-### 1. Prerequisites
+### 1. Chuẩn Bị Môi Trường
 
-Ensure your host machine has the following components installed:
-
-* **OS:** Linux (Ubuntu 20.04/22.04 recommended).
-* **NVIDIA Drivers & CUDA:** Compatible with CUDA 13.0+ (Driver version >= 535.x).
-* **Docker & NVIDIA Container Toolkit:** Mandatory for GPU passthrough.
+* **Hệ điều hành:** Linux (Khuyến nghị Ubuntu 20.04/22.04 LTS).
+* **NVIDIA Driver & CUDA:** Tương thích CUDA 13.0+ (Driver >= 535.x).
+* **Docker & NVIDIA Container Toolkit:** Đảm bảo Docker có quyền truy cập GPU.
 ```bash
-# Install NVIDIA Container Toolkit (If not already installed)
+sudo apt-get update
 sudo apt-get install -y nvidia-container-toolkit
 sudo nvidia-ctk runtime configure --runtime=docker
 sudo systemctl restart docker
@@ -255,56 +140,49 @@ sudo systemctl restart docker
 
 
 
-### 2. Prepare the Model Weights
+### 2. Chuẩn Bị Tệp Trọng Số (Model Weights)
 
-In the official system, weights are pre-mounted at `/model`. For local testing, you need to download the model and mount it manually.
+Tải mô hình **LFM2.5-1.2B-Instruct** từ HuggingFace về thư mục cục bộ để mount vào container:
 
 ```bash
-# Create working directory
 mkdir -p vllm-lfm-serving && cd vllm-lfm-serving
-
-# Clone the model from HuggingFace (Requires git-lfs)
 git clone [https://huggingface.co/viettel/LFM2.5-1.2B-Instruct](https://huggingface.co/viettel/LFM2.5-1.2B-Instruct) ./model_weights
 
 ```
 
-### 3. Configure and Launch
+### 3. Khởi Chạy Container
 
-Create the `docker-compose.yml` file with the content from the [Quick Start](https://www.google.com/search?q=%23-deployment-configuration-quick-start) section.
-*(Note: Add the `volumes` block to mount the local model weights into the container).*
+Thêm khối `volumes` vào `docker-compose.yml` để mount thư mục trọng số mô hình:
 
 ```yaml
-    # ... (Keep existing configs)
     ports:
       - "8000:8000"
     shm_size: "2g"
     volumes:
-      - ./model_weights:/model   # Mount local weights to /model inside the container
+      - ./model_weights:/model   # Mount trọng số local vào /model trong container
     deploy:
       resources:
         # ...
 
 ```
 
-Launch the vLLM server in detached mode:
+Chạy container ở chế độ chạy ngầm:
 
 ```bash
 docker compose up -d
 
 ```
 
-### 4. Verification
+### 4. Kiểm Tra Vận Hành
 
-Check the logs to ensure the model has successfully loaded and the KV Cache is initialized:
+Xem log khởi tạo mô hình và KV cache:
 
 ```bash
 docker compose logs -f model
 
 ```
 
-*Success Indicator: You will see `Uvicorn running on http://0.0.0.0:8000` alongside the VRAM allocation profiling block.*
-
-Send a test cURL request to verify the actual response speed:
+Gửi request kiểm tra độ trễ phản hồi qua API:
 
 ```bash
 curl -X POST http://localhost:8000/v1/chat/completions \
@@ -312,7 +190,7 @@ curl -X POST http://localhost:8000/v1/chat/completions \
   -d '{
     "model": "LFM2.5-1.2B-Instruct",
     "messages": [
-      {"role": "user", "content": "Hello, how are you today?"}
+      {"role": "user", "content": "Xin chào, hãy giới thiệu ngắn gọn về bạn."}
     ],
     "max_tokens": 100,
     "temperature": 0.7,
@@ -321,21 +199,21 @@ curl -X POST http://localhost:8000/v1/chat/completions \
 
 ```
 
-## ⚠️ Identified Pitfalls
+## ⚠️ Các Cạm Bẫy Cần Tránh
 
-During our reverse engineering of the custom image and analysis of `arg_utils.py`, the following flags were proven detrimental to this specific environment and are **STRICTLY PROHIBITED**:
+Quá trình dịch ngược mã nguồn `arg_utils.py` và phân tích log thử nghiệm đã chỉ ra các cờ cấu hình gây lỗi nghiêm trọng:
 
-* ❌ `--swap-space`: Removed from the updated vLLM source code; using this triggers an immediate `Exit Code 2` crash.
-* ❌ `--performance-mode=throughput`: Silently doubles `max_num_seqs` (14 $\rightarrow$ 28) at the C++ level. This overwhelms the 3-core CPU, leading to >80 timeout requests.
-* ❌ `--kv-cache-dtype=fp8_e5m2`: Causes severe kernel conflicts with LFM2.5 during the Decode phase, plummeting `tokens_per_sec` to near zero (Decode Stall). Always prioritize `e4m3`.
+* ❌ `--swap-space`: Đã bị xóa hoàn toàn khỏi mã nguồn vLLM bản này; khai báo cờ sẽ khiến container sập ngay lập tức (`Exit Code 2`).
+* ❌ `--performance-mode=throughput`: Tự động nhân đôi `max_num_seqs` (từ 14 lên 28) ở tầng C++, vượt quá khả năng xử lý của 3 CPU cores và làm timeout hơn 80 requests.
+* ❌ `--kv-cache-dtype=fp8_e5m2`: Gây xung đột kernel tính toán với LFM2.5 ở pha Decode, kéo `tokens_per_sec` về gần bằng 0. Bắt buộc dùng `fp8_e4m3`.
 
 ---
 
-## 👨‍💻 Author
+## 👨‍💻 Tác Giả
 
-* **Phan Khánh Tâm (Tâm)**
-* Student, Computer Engineering @ University of Information Technology (UIT), VNU-HCM
-* Competitor @ Viettel AI Race 2026
+* **Phan Khánh Tâm**
+* Khoa Kỹ thuật Máy tính — Trường Đại học Công nghệ Thông tin, ĐHQG-HCM (UIT)
+* Thí sinh tham gia **Viettel AI Race 2026**
 
 ```
 
