@@ -1,4 +1,3 @@
-
 # 🚀 Viettel AI Race 2026: Tối Ưu Hóa vLLM Serving Cho Mô Hình LFM2.5
 
 <div align="center">
@@ -6,12 +5,13 @@
   <img src="https://img.shields.io/badge/Model-LFM2.5--1.2B-orange?style=for-the-badge" alt="Model" />
   <img src="https://img.shields.io/badge/Hardware-NVIDIA_H200_MIG_7-76B900?style=for-the-badge&logo=nvidia" alt="Hardware" />
   <img src="https://img.shields.io/badge/ERS_Score-61.26-success?style=for-the-badge" alt="ERS Score" />
+  <img src="https://img.shields.io/badge/Final_Rank-170%2F281-blueviolet?style=for-the-badge" alt="Final Rank" />
 </div>
 
 ## 📑 Mục Lục
 - [Tổng Quan Dự Án](#-tổng-quan-dự-án)
 - [Môi Trường & Ràng Buộc Phần Cứng](#-môi-trường--ràng-buộc-phần-cứng)
-- [Kết Quả Benchmark (Mốc V10)](#-kết-quả-benchmark-mốc-v10)
+- [Kết Quả Chung Cuộc & Benchmark](#-kết-quả-chung-cuộc--benchmark)
 - [Chiến Lược Tối Ưu Hóa](#-chiến-lược-tối-ưu-hóa)
 - [Cấu Hình Triển Khai](#-cấu-hình-triển-khai)
 - [Hướng Dẫn Cài Đặt & Chạy Thử](#-hướng-dẫn-cài-đặt--chạy-thử)
@@ -34,17 +34,18 @@ Hệ thống hoạt động trong môi trường phần cứng có sự bất đ
 * **Docker Image:** `24521569/lfm-optimized:v1` (Tích hợp FlashInfer 0.6.11, CUDA 13.0.2 trên nền vLLM tùy biến).
 * **Cơ Chế Đánh Giá:** Máy chấm gửi các luồng request hội thoại đa lượt (multi-turn chat) theo phân phối Poisson tới **1 worker duy nhất**. Điểm số bị phạt nặng nhất bởi chỉ số `failed_count` (các request quá thời gian chờ).
 
-## 📊 Kết Quả Benchmark
+## 📊 Kết Quả Chung Cuộc & Benchmark
 
-Cấu hình **V10** là mốc cân bằng tối ưu nhất được xác lập trong quá trình thử nghiệm:
+Dự án khép lại chiến dịch với thứ hạng **170/281** chung cuộc. Cấu hình **này** là mốc cân bằng tối ưu nhất được xác lập trong quá trình thử nghiệm thực tế:
 
-| Chỉ Số | Kết Quả |
+| Chỉ Số | Kết Quả | 
 | :--- | :--- | :--- |
-| **Điểm ERS** | **61.26** | 
-| **TTFT P50** | `43ms` | 
-| **TTFT P95** | `70ms` | 
+| **Thứ Hạng Chung Cuộc** | **170 / 281** |
+| **Điểm ERS Đạt Được** | **61.26** |
+| **TTFT P50** | `43ms` |
+| **TTFT P95** | `70ms` |
 | **Tỷ Lệ Thành Công** | `413 / 420` | 
-| **TBT Median** | `4ms` |
+| **TBT Median** | `4ms` | 
 
 ## 💡 Chiến Lược Tối Ưu Hóa
 
@@ -209,7 +210,7 @@ Quá trình dịch ngược mã nguồn `arg_utils.py` và phân tích log thử
 
 * **Phan Khánh Tâm**
 * Khoa Kỹ thuật Máy tính — Trường Đại học Công nghệ Thông tin, ĐHQG-HCM (UIT)
-* Thí sinh tham gia **Viettel AI Race 2026**
+* Thành tích: Hạng **170 / 281** tại **Viettel AI Race 2026** (ERS: 61.26)
 
 ```
 
