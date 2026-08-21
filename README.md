@@ -1,8 +1,4 @@
-Dưới đây là toàn bộ nội dung file `README.md` hoàn chỉnh bằng tiếng Việt, được chuẩn hóa theo phong cách tài liệu mã nguồn mở chuyên nghiệp. Bạn chỉ cần copy và paste toàn bộ khối mã bên dưới vào repo.
 
----
-
-```markdown
 # 🚀 Viettel AI Race 2026: Tối Ưu Hóa vLLM Serving Cho Mô Hình LFM2.5
 
 <div align="center">
